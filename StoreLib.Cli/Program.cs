@@ -1,69 +1,57 @@
 ﻿using System;
 using System.Threading.Tasks;
-using CommandLine;
 using StoreLib.Services;
 using StoreLib.Models;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Linq;
+using StoreLib.Exceptions;
 
 namespace StoreLib.Cli
 {
-
-    enum Commands
-    {
-        Packages,
-        Query,
-        Search,
-        Convert
-    }
-
+    
     class Options
     {
-        [Option('a', "authtoken", Required = false, HelpText = "Auth-token header value (e.g. \"XBL3.0=123;xyz\")")]
+        // [Option('a', "authtoken", Required = false, HelpText = "Auth-token header value (e.g. \"XBL3.0=123;xyz\")")]
         public string AuthToken { get; set; }
 
-        [Option('m', "market", Required = false, Default = Market.US, HelpText = "Market (e.g. US)")]
+        // [Option('m', "market", Required = false, Default = Market.US, HelpText = "Market (e.g. US)")]
         public Market Market { get; set; }
 
-        [Option('l', "lang", Required = false, Default=Lang.en, HelpText = "Language (e.g. EN)")]
+        // [Option('l', "lang", Required = false, Default=Lang.en, HelpText = "Language (e.g. EN)")]
         public Lang Language { get; set; }
 
-        [Option('e', "env", Required = false, Default=DCatEndpoint.Production, HelpText = "Environment (e.g. Production)")]
+        // [Option('e', "env", Required = false, Default=DCatEndpoint.Production, HelpText = "Environment (e.g. Production)")]
         public DCatEndpoint Environment { get; set; }
 
-        [Option('t', "idtype", Required = false, Default=IdentiferType.ProductID, HelpText = "IdentifierType")]
+        // [Option('t', "idtype", Required = false, Default=IdentiferType.ProductID, HelpText = "IdentifierType")]
         public IdentiferType IdType { get; set; }
 
-        [Option('f', "devicefamily", Required = false, Default=DeviceFamily.Desktop, HelpText = "Device Family (used for search)")]
+        // [Option('f', "devicefamily", Required = false, Default=DeviceFamily.Desktop, HelpText = "Device Family (used for search)")]
         public DeviceFamily DeviceFamily { get; set; }
-
-        [Value(0, MetaName = "command", Required = true,
-         HelpText = "Command to execute\nAvailable commands: packages, query, search, convert")]
-        public Commands Command { get; set; }
-
-        [Value(1, MetaName = "id", Required = true, HelpText = "Id or Search-query")]
-        public string IdOrSearchQuery { get; set; }
     }
 
     class Program
     {
         static void Main(string[] args)
         {
-            var parser = new Parser(
-                with => {
-                    with.HelpWriter = Console.Error;
-                    with.AutoHelp = true;
-                    with.CaseInsensitiveEnumValues = true;
-                }
-            );
-            parser.ParseArguments<Options>(args)
-                .WithParsed(Run)
-                .WithNotParsed(HandleErrors);
+            Run(new Options()
+            {
+                AuthToken = "",
+
+                Market = Market.RU,
+
+                Language = Lang.ru,
+
+                Environment = DCatEndpoint.Production,
+
+                IdType = IdentiferType.ProductID,
+
+                DeviceFamily = DeviceFamily.Desktop,
+            }).Wait();
         }
 
-        private static void Run(Options opts)
+        private static async Task Run(Options opts)
         {
+            String name = "Whatsapp";
+
             DisplayCatalogHandler dcatHandler = new DisplayCatalogHandler(
                 opts.Environment,
                 new Locale(opts.Market, opts.Language, true));
@@ -81,42 +69,66 @@ namespace StoreLib.Cli
                 CommandHandler.Token = opts.AuthToken;
             }
 
-            switch (opts.Command)
+            // Base search
+            DCatSearch results;
+            try
             {
-                case Commands.Packages:
-                    Console.WriteLine("* PACKAGES");
-                    CommandHandler
-                        .PackagesAsync(dcatHandler, opts.IdOrSearchQuery, opts.IdType)
-                        .GetAwaiter()
-                        .GetResult();
-                    break;
-                case Commands.Query:
-                    Console.WriteLine("* QUERY");
-                    CommandHandler
-                        .AdvancedQueryAsync(dcatHandler, opts.IdOrSearchQuery, opts.IdType)
-                        .GetAwaiter()
-                        .GetResult();
-                    break;
-                case Commands.Search:
-                    Console.WriteLine("* SEARCH");
-                    CommandHandler
-                        .SearchAsync(dcatHandler, opts.IdOrSearchQuery, opts.DeviceFamily)
-                        .GetAwaiter()
-                        .GetResult();
-                    break;
-                case Commands.Convert:
-                    Console.WriteLine("* CONVERT");
-                    CommandHandler
-                        .ConvertId(dcatHandler, opts.IdOrSearchQuery, opts.IdType)
-                        .GetAwaiter()
-                        .GetResult();
-                    break;
+                results = await dcatHandler.SearchDcatAsync(name, opts.DeviceFamily);
             }
-        }
+            catch (Exception exception)
+            {
+                Console.WriteLine("Failed to search DisplayCatalog");
+                Console.WriteLine(exception);
+                return;
+            }
 
-        static void HandleErrors(IEnumerable<Error> errs)
-        {
-            Console.WriteLine("Failed to parse cmdline arguments");
+            if (dcatHandler.Result != DisplayCatalogResult.Found)
+            {
+                Console.WriteLine("Result not found");   
+            }
+            
+            foreach (Result res in results.Results)
+            {
+                foreach (Product prod in res.Products)
+                {
+                    Console.WriteLine($"{prod.Title} {prod.Type}: {prod.ProductId}. image: {prod.Icon}");
+                }
+            }
+
+            var firstResult = results.Results.Find(e => e.Products.Count != 0);
+            
+            if (firstResult == null)
+            {
+                Console.WriteLine("Results count 0.");
+                return;
+            }
+            
+            
+            // Product full info
+            DisplayCatalogModel displayCatalogModel;
+            try
+            {
+                displayCatalogModel = await dcatHandler.QueryDcatAsync(firstResult.Products[0].ProductId, IdentiferType.ProductID);
+            }
+            catch (StoreLibException exception)
+            {
+                Console.WriteLine("Failed to search DisplayCatalog");
+                Console.WriteLine(exception);
+                return;
+            }
+
+            Product product = displayCatalogModel.Product;
+            //download product
+            
+            var packages = await dcatHandler.GetPackagesForProductAsync(product);
+            //iterate through all packages
+            foreach (PackageInstance package in packages)
+            {
+                var url = package.PackageUri;
+                Console.WriteLine($"URL: {url}");
+            }
+
         }
+        
     }
 }

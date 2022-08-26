@@ -20,39 +20,39 @@ namespace StoreLib.Tests
         public async Task QueryNetflix()
         {
             DisplayCatalogHandler dcathandler = new DisplayCatalogHandler(DCatEndpoint.Production, new Locale(Market.US, Lang.en, true));
-            await dcathandler.QueryDcatAsync("9wzdncrfj3tj");
+            var productListing = await dcathandler.QueryDcatAsync("9wzdncrfj3tj");
 
-            Assert.True(dcathandler.IsFound);
-            Assert.Equal("Netflix", dcathandler.ProductListing.Product.LocalizedProperties[0].ProductTitle);
+            Assert.NotNull(productListing.Product);
+            Assert.Equal("Netflix", productListing.Product.LocalizedProperties[0].ProductTitle);
         }
 
         [Fact]
         public async Task QueryNetflixProdConfig()
         {
             DisplayCatalogHandler dcathandler = DisplayCatalogHandler.ProductionConfig();
-            await dcathandler.QueryDcatAsync("9wzdncrfj3tj");
+            var productListing = await dcathandler.QueryDcatAsync("9wzdncrfj3tj");
 
-            Assert.True(dcathandler.IsFound);
-            Assert.Equal("Netflix", dcathandler.ProductListing.Product.LocalizedProperties[0].ProductTitle);
+            Assert.NotNull(productListing.Product);
+            Assert.Equal("Netflix", productListing.Product.LocalizedProperties[0].ProductTitle);
         }
 
         [Fact]
         public async Task QueryNetflixUsingPackageFamilyName()
         {
             DisplayCatalogHandler dcathandler = new DisplayCatalogHandler(DCatEndpoint.Production, new Locale(Market.US, Lang.en, true));
-            await dcathandler.QueryDcatAsync("Microsoft.SoDTest_8wekyb3d8bbwe", IdentiferType.PackageFamilyName);
+            var productListing = await dcathandler.QueryDcatAsync("Microsoft.SoDTest_8wekyb3d8bbwe", IdentiferType.PackageFamilyName);
 
-            Assert.True(dcathandler.IsFound);
+            Assert.NotNull(productListing.Product);
         }
 
         [Fact]
         public async Task QueryNetflixInt()
         {
             DisplayCatalogHandler dcathandler = new DisplayCatalogHandler(DCatEndpoint.Int, new Locale(Market.US, Lang.en, true));
-            await dcathandler.QueryDcatAsync("9wzdncrfj3tj");
+            var productListing =await dcathandler.QueryDcatAsync("9wzdncrfj3tj");
 
-            Assert.True(dcathandler.IsFound);
-            Assert.Equal("Netflix", dcathandler.ProductListing.Product.LocalizedProperties[0].ProductTitle);
+            Assert.NotNull(productListing.Product);
+            Assert.Equal("Netflix", productListing.Product.LocalizedProperties[0].ProductTitle);
         }
 
         [Fact]
@@ -69,10 +69,10 @@ namespace StoreLib.Tests
         public async Task GetSuperHeroArtForNetflix()
         {
             DisplayCatalogHandler dcathandler = new DisplayCatalogHandler(DCatEndpoint.Production, new Locale(Market.US, Lang.en, true));
-            await dcathandler.QueryDcatAsync("9wzdncrfj3tj");
+            var productListing = await dcathandler.QueryDcatAsync("9wzdncrfj3tj");
 
-            Assert.True(dcathandler.IsFound);
-            Uri SuperHeroArt = StoreLib.Utilities.ImageHelpers.GetImageUri(ImagePurpose.SuperHeroArt, dcathandler.ProductListing);
+            Assert.NotNull(productListing.Product);
+            Uri SuperHeroArt = StoreLib.Utilities.ImageHelpers.GetImageUri(ImagePurpose.SuperHeroArt, productListing);
             Assert.NotNull(SuperHeroArt);
         }
 
@@ -86,20 +86,20 @@ namespace StoreLib.Tests
             Lang RandomLang = (Lang)Langs.GetValue(ran.Next(Langs.Length));
             _output.WriteLine($"RandomLocale: Testing with {RandomMarket}-{RandomLang}");
             DisplayCatalogHandler dcathandler = new DisplayCatalogHandler(DCatEndpoint.Production, new Locale(RandomMarket, RandomLang, true));
-            await dcathandler.QueryDcatAsync("9wzdncrfj3tj");
+            var productListing = await dcathandler.QueryDcatAsync("9wzdncrfj3tj");
 
-            Assert.True(dcathandler.IsFound);
-            Assert.Equal("Netflix", dcathandler.ProductListing.Product.LocalizedProperties[0].ProductTitle);
+            Assert.NotNull(productListing.Product);
+            Assert.Equal("Netflix", productListing.Product.LocalizedProperties[0].ProductTitle);
         }
 
         [Fact]
         public async Task CacheImage()
         {
             DisplayCatalogHandler dcathandler = new DisplayCatalogHandler(DCatEndpoint.Production, new Locale(Market.US, Lang.en, true));
-            await dcathandler.QueryDcatAsync("9wzdncrfj3tj");
+            var productListing = await dcathandler.QueryDcatAsync("9wzdncrfj3tj");
 
-            Assert.True(dcathandler.IsFound);
-            Uri SuperHeroArt = StoreLib.Utilities.ImageHelpers.GetImageUri(ImagePurpose.SuperHeroArt, dcathandler.ProductListing);
+            Assert.NotNull(productListing.Product);
+            Uri SuperHeroArt = StoreLib.Utilities.ImageHelpers.GetImageUri(ImagePurpose.SuperHeroArt, productListing);
             byte[] imagetest = await Utilities.ImageHelpers.CacheImageAsync(SuperHeroArt, Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), false); //The ExecutingAssembly path is only being used for this unit test, in an actual program, you would want to save to the temp.
             Assert.NotNull(imagetest);
         }

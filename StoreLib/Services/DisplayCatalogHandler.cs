@@ -4,19 +4,18 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
+using StoreLib.Exceptions;
 
 namespace StoreLib.Services
 {
     public class DisplayCatalogHandler
     {
         private readonly MSHttpClient _httpClient;
-
-        public DisplayCatalogModel ProductListing { get; private set; }
+        
         private Uri ConstructedUri { get; set; }
         private DCatEndpoint _selectedEndpoint;
-        private DisplayCatalogResult Result { get; set; }
+        public DisplayCatalogResult Result { get; private set; }
         private readonly Locale _selectedLocale;
-        public bool IsFound;
 
 
         public DisplayCatalogHandler(DCatEndpoint selectedEndpoint, Locale locale)
@@ -38,9 +37,9 @@ namespace StoreLib.Services
         /// Returns an IList of Uris containing the direct download links for the product's apps and dependacies. (if it has any). 
         /// </summary>
         /// <returns>IList of Direct File URLs</returns>
-        public async Task<IList<PackageInstance>> GetPackagesForProductAsync(string msaToken = null)
+        public async Task<IList<PackageInstance>> GetPackagesForProductAsync(Product product, string msaToken = null)
         {
-            string xml = await FE3Handler.SyncUpdatesAsync(ProductListing.Product.DisplaySkuAvailabilities[0].Sku.Properties.FulfillmentData.WuCategoryId, msaToken);
+            string xml = await FE3Handler.SyncUpdatesAsync(product.DisplaySkuAvailabilities[0].Sku.Properties.FulfillmentData.WuCategoryId, msaToken);
             IList<string> revisionIDs;
             IList<string> packageNames;
             IList<string> updateIDs;
@@ -64,11 +63,11 @@ namespace StoreLib.Services
         /// <param name="idType">Type of ID being passed.</param>
         /// <param name="authenticationToken"></param>
         /// <returns></returns>
-        public async Task QueryDcatAsync(string id, IdentiferType idType = IdentiferType.ProductID, string authenticationToken = null) //Optional Authentication Token used for Sandbox and Flighting Queries.
+        public async Task<DisplayCatalogModel> QueryDcatAsync(string id, IdentiferType idType = IdentiferType.ProductID, string authenticationToken = null) //Optional Authentication Token used for Sandbox and Flighting Queries.
         {
             ConstructedUri = Utilities.UriHelpers.CreateAlternateDCatUri(_selectedEndpoint, id, idType, _selectedLocale);
             Result = new DisplayCatalogResult(); //We need to clear the result incase someone queries a product, then queries a not found one, the wrong product will be returned.
-            HttpResponseMessage httpResponse = new HttpResponseMessage();
+            HttpResponseMessage httpResponse;
             
             //We need to build the request URL based on the requested EndPoint;
             var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, ConstructedUri);
@@ -82,25 +81,26 @@ namespace StoreLib.Services
             {
                 httpResponse = await _httpClient.SendAsync(httpRequestMessage, new System.Threading.CancellationToken());
             }
-            catch (TaskCanceledException)
+            catch (TaskCanceledException e)
             {
-                Result = DisplayCatalogResult.TimedOut;
+                throw new TimeoutException("Request time out", e);
             }
+            
             if (httpResponse.IsSuccessStatusCode)
             {
                 string content = await httpResponse.Content.ReadAsStringAsync();
-                Result = DisplayCatalogResult.Found;
-                IsFound = true;
-                ProductListing = DisplayCatalogModel.FromJson(content);
+                return DisplayCatalogModel.FromJson(content);
             }
-            else if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+
+            if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                Result = DisplayCatalogResult.NotFound;
+                throw new NotFoundException(_selectedEndpoint.ToString());
             }
-            else
-            {
-                throw new Exception($"Failed to query DisplayCatalog Endpoint: {_selectedEndpoint.ToString()} Status Code: {httpResponse.StatusCode} Returned Data: {await httpResponse.Content.ReadAsStringAsync()}");
-            }
+
+            var rawResponse = await httpResponse.Content.ReadAsStringAsync();
+            
+            throw new HttpException($"Failed to query DisplayCatalog Endpoint: {_selectedEndpoint.ToString()} Status Code: {httpResponse.StatusCode} Returned Data: {rawResponse}",
+                _selectedEndpoint.ToString(), (int)httpResponse.StatusCode, rawResponse);
         }
 
         /// <summary>

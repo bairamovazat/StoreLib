@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Threading.Tasks;
+using StoreLib.Exceptions;
 using StoreLib.Models;
 using StoreLib.Services;
 
@@ -27,7 +28,7 @@ namespace StoreLib.Cli
             return (Math.Sign(byteCount) * num).ToString() + suf[place];
         }
 
-        private static async Task<string> GetPrintablePackageLink(Uri uri, string entryName = "UNKNOWN")
+        public static async Task<string> GetPrintablePackageLink(Uri uri, string entryName = "UNKNOWN")
         {
             HttpRequestMessage httpRequest = new HttpRequestMessage();
             httpRequest.RequestUri = uri;
@@ -66,24 +67,36 @@ namespace StoreLib.Cli
         /// <returns></returns>
         public static async Task PackagesAsync(DisplayCatalogHandler dcatHandler, string id, IdentiferType type)
         {
-            if (String.IsNullOrEmpty(Token))
-                await dcatHandler.QueryDcatAsync(id, type);
-            else
-                await dcatHandler.QueryDcatAsync(id, type, Token);
-            
-            if (!dcatHandler.IsFound)
+            DisplayCatalogModel displayCatalogModel;
+            try
+            {
+                displayCatalogModel =
+                    await dcatHandler.QueryDcatAsync(id, type, (String.IsNullOrEmpty(Token) ? null : Token));
+            }
+            catch (TimeoutException e)
+            {
+                Console.WriteLine($"TimeoutException: {e.Message}");
+                return;
+            }
+            catch (NotFoundException e)
             {
                 Console.WriteLine("Product not found!");
+                Console.WriteLine($"NotFoundException: {e.Message}");
+                return;
+            }
+            catch (HttpException e)
+            {
+                Console.WriteLine($"Generic HttpException: {e.Message}");
+                return;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Undefined Exception: {e.Message}");
                 return;
             }
 
-            if (dcatHandler.ProductListing.Product != null) //One day ill fix the mess that is the StoreLib JSON, one day.
-            {
-                dcatHandler.ProductListing.Products = new List<Product>();
-                dcatHandler.ProductListing.Products.Add(dcatHandler.ProductListing.Product);
-            }
-
-            var product = dcatHandler.ProductListing.Products[0];
+            
+            var product = displayCatalogModel.Products[0];
             var props = product.DisplaySkuAvailabilities[0].Sku.Properties;
             var header = $"{product.LocalizedProperties[0].ProductTitle} - {product.LocalizedProperties[0].PublisherName}";
 
@@ -96,7 +109,7 @@ namespace StoreLib.Cli
                 return;
             }
 
-            var packages = await dcatHandler.GetPackagesForProductAsync();
+            var packages = await dcatHandler.GetPackagesForProductAsync(displayCatalogModel.Product);
             //iterate through all packages
             foreach (PackageInstance package in packages)
             {
@@ -110,9 +123,9 @@ namespace StoreLib.Cli
                 return;
             }
 
-            foreach (var Package in props.Packages[0].PackageDownloadUris)
+            foreach (var package in props.Packages[0].PackageDownloadUris)
             {
-                var line = await GetPrintablePackageLink(new Uri(Package.Uri));
+                var line = await GetPrintablePackageLink(new Uri(package.Uri));
                 Console.WriteLine(line);
             }
         }
@@ -125,24 +138,35 @@ namespace StoreLib.Cli
         /// <returns></returns>
         public static async Task AdvancedQueryAsync(DisplayCatalogHandler dcatHandler, string id, IdentiferType type)
         {
-            if (String.IsNullOrEmpty(Token))
-                await dcatHandler.QueryDcatAsync(id, type);
-            else
-                await dcatHandler.QueryDcatAsync(id, type, Token);
-
-            if (!dcatHandler.IsFound)
+            DisplayCatalogModel displayCatalogModel;
+            try
             {
-                Console.WriteLine("Product not found");
+                displayCatalogModel =
+                    await dcatHandler.QueryDcatAsync(id, type, (String.IsNullOrEmpty(Token) ? null : Token));
+            }
+            catch (TimeoutException e)
+            {
+                Console.WriteLine($"TimeoutException: {e.Message}");
+                return;
+            }
+            catch (NotFoundException e)
+            {
+                Console.WriteLine("Product not found!");
+                Console.WriteLine($"NotFoundException: {e.Message}");
+                return;
+            }
+            catch (HttpException e)
+            {
+                Console.WriteLine($"Generic HttpException: {e.Message}");
+                return;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Undefined Exception: {e.Message}");
                 return;
             }
 
-            if (dcatHandler.ProductListing.Product != null) //One day ill fix the mess that is the StoreLib JSON, one day.
-            {
-                dcatHandler.ProductListing.Products = new List<Product>();
-                dcatHandler.ProductListing.Products.Add(dcatHandler.ProductListing.Product);
-            }
-
-            var product = dcatHandler.ProductListing.Product;
+            var product = displayCatalogModel.Product;
 
             Console.WriteLine("App Info:");
             Console.WriteLine($"{product.LocalizedProperties[0].ProductTitle} - {product.LocalizedProperties[0].PublisherName}");
@@ -214,24 +238,37 @@ namespace StoreLib.Cli
         /// <returns></returns>
         public static async Task ConvertId(DisplayCatalogHandler dcatHandler, string id, IdentiferType type)
         {
-            if (String.IsNullOrEmpty(Token))
-                await dcatHandler.QueryDcatAsync(id, type);
-            else
-                await dcatHandler.QueryDcatAsync(id, type, Token);
-
-            if (!dcatHandler.IsFound)
+            DisplayCatalogModel displayCatalogModel;
+            try
             {
-                Console.WriteLine("No Product found!");
+                displayCatalogModel =
+                    await dcatHandler.QueryDcatAsync(id, type, (String.IsNullOrEmpty(Token) ? null : Token));
+            }
+            catch (TimeoutException e)
+            {
+                Console.WriteLine($"TimeoutException: {e.Message}");
                 return;
             }
-
-            if (dcatHandler.ProductListing.Product != null) //One day ill fix the mess that is the StoreLib JSON, one day. Yeah mate just like how one day i'll learn how to fly
+            catch (NotFoundException e)
             {
-                dcatHandler.ProductListing.Products = new List<Product>();
-                dcatHandler.ProductListing.Products.Add(dcatHandler.ProductListing.Product);
+                Console.WriteLine("Product not found!");
+                Console.WriteLine($"NotFoundException: {e.Message}");
+                return;
             }
+            catch (HttpException e)
+            {
+                Console.WriteLine($"Generic HttpException: {e.Message}");
+                return;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Undefined Exception: {e.Message}");
+                return;
+            }
+            
+            
 
-            var product = dcatHandler.ProductListing.Products[0];
+            var product = displayCatalogModel.Products[0];
 
             Console.WriteLine("App info:");
             Console.WriteLine($"{product.LocalizedProperties[0].ProductTitle} - {product.LocalizedProperties[0].PublisherName}");

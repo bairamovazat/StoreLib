@@ -21,11 +21,11 @@ namespace StoreLib.Tests
         public async Task GetPackagesForNetflix()
         {
             DisplayCatalogHandler displayCatalog = new DisplayCatalogHandler(DCatEndpoint.Production, new Locale(Market.US, Lang.en, true));
-            await displayCatalog.QueryDcatAsync("9wzdncrfj3tj");
+            var productListing = await displayCatalog.QueryDcatAsync("9wzdncrfj3tj");
+            
+            Assert.NotNull(productListing.Product);
 
-            Assert.True(displayCatalog.IsFound);
-
-            string xml = await FE3Handler.SyncUpdatesAsync(displayCatalog.ProductListing.Product.DisplaySkuAvailabilities[0].Sku.Properties.FulfillmentData.WuCategoryId);
+            string xml = await FE3Handler.SyncUpdatesAsync(productListing.Product.DisplaySkuAvailabilities[0].Sku.Properties.FulfillmentData.WuCategoryId);
             IList<string> RevisionIds = new List<string>();
             IList<string> PackageNames = new List<string>();
             IList<string> UpdateIDs = new List<string>();
@@ -41,11 +41,11 @@ namespace StoreLib.Tests
         public async Task GetPackagesAndNamesForNetflix()
         {
             DisplayCatalogHandler displayCatalog = DisplayCatalogHandler.ProductionConfig();
-            await displayCatalog.QueryDcatAsync("9wzdncrfj3tj");
+            var productListing = await displayCatalog.QueryDcatAsync("9wzdncrfj3tj");
 
-            Assert.True(displayCatalog.IsFound);
+            Assert.NotNull(productListing.Product);
 
-            string xml = await FE3Handler.SyncUpdatesAsync(displayCatalog.ProductListing.Product.DisplaySkuAvailabilities[0].Sku.Properties.FulfillmentData.WuCategoryId);
+            string xml = await FE3Handler.SyncUpdatesAsync(productListing.Product.DisplaySkuAvailabilities[0].Sku.Properties.FulfillmentData.WuCategoryId);
             IList<string> RevisionIds = new List<string>();
             IList<string> PackageNames = new List<string>();
             IList<string> UpdateIDs = new List<string>();
@@ -57,10 +57,10 @@ namespace StoreLib.Tests
         public async Task GetPackageInstancesForNetflix()
         {
             DisplayCatalogHandler handler = DisplayCatalogHandler.ProductionConfig();
-            await handler.QueryDcatAsync("9wzdncrfj3tj");
+            var productListing = await handler.QueryDcatAsync("9wzdncrfj3tj");
             Debug.WriteLine("Running GetPackageInstancesForNetflix");
             string WUID = "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa";
-            var packageinstances = await handler.GetPackagesForProductAsync();
+            var packageinstances = await handler.GetPackagesForProductAsync(productListing.Product);
             foreach (var item in packageinstances)
             {
                 Debug.WriteLine($"{item.PackageMoniker} : {item.PackageType} : {item.PackageUri}");
