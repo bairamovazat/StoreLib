@@ -20,7 +20,7 @@ namespace StoreLib.Tests
         public async Task QueryNetflix()
         {
             DisplayCatalogHandler dcathandler = new DisplayCatalogHandler(DCatEndpoint.Production, new Locale(Market.US, Lang.en, true));
-            await dcathandler.QueryDCATAsync("9wzdncrfj3tj");
+            await dcathandler.QueryDcatAsync("9wzdncrfj3tj");
 
             Assert.True(dcathandler.IsFound);
             Assert.Equal("Netflix", dcathandler.ProductListing.Product.LocalizedProperties[0].ProductTitle);
@@ -30,7 +30,7 @@ namespace StoreLib.Tests
         public async Task QueryNetflixProdConfig()
         {
             DisplayCatalogHandler dcathandler = DisplayCatalogHandler.ProductionConfig();
-            await dcathandler.QueryDCATAsync("9wzdncrfj3tj");
+            await dcathandler.QueryDcatAsync("9wzdncrfj3tj");
 
             Assert.True(dcathandler.IsFound);
             Assert.Equal("Netflix", dcathandler.ProductListing.Product.LocalizedProperties[0].ProductTitle);
@@ -40,7 +40,7 @@ namespace StoreLib.Tests
         public async Task QueryNetflixUsingPackageFamilyName()
         {
             DisplayCatalogHandler dcathandler = new DisplayCatalogHandler(DCatEndpoint.Production, new Locale(Market.US, Lang.en, true));
-            await dcathandler.QueryDCATAsync("Microsoft.SoDTest_8wekyb3d8bbwe", IdentiferType.PackageFamilyName);
+            await dcathandler.QueryDcatAsync("Microsoft.SoDTest_8wekyb3d8bbwe", IdentiferType.PackageFamilyName);
 
             Assert.True(dcathandler.IsFound);
         }
@@ -49,7 +49,7 @@ namespace StoreLib.Tests
         public async Task QueryNetflixInt()
         {
             DisplayCatalogHandler dcathandler = new DisplayCatalogHandler(DCatEndpoint.Int, new Locale(Market.US, Lang.en, true));
-            await dcathandler.QueryDCATAsync("9wzdncrfj3tj");
+            await dcathandler.QueryDcatAsync("9wzdncrfj3tj");
 
             Assert.True(dcathandler.IsFound);
             Assert.Equal("Netflix", dcathandler.ProductListing.Product.LocalizedProperties[0].ProductTitle);
@@ -59,7 +59,7 @@ namespace StoreLib.Tests
         public async Task SearchXbox()
         {
             DisplayCatalogHandler dcathandler = new DisplayCatalogHandler(DCatEndpoint.Production, new Locale(Market.US, Lang.en, true));
-            DCatSearch search = await dcathandler.SearchDCATAsync("Halo 5", DeviceFamily.Xbox);
+            DCatSearch search = await dcathandler.SearchDcatAsync("Halo 5", DeviceFamily.Xbox);
 
             _output.WriteLine($"Halo 5: Guardians: Result Count: {search.TotalResultCount}");
             Assert.Equal("Halo 5: Guardians", search.Results[0].Products[0].Title);
@@ -69,7 +69,7 @@ namespace StoreLib.Tests
         public async Task GetSuperHeroArtForNetflix()
         {
             DisplayCatalogHandler dcathandler = new DisplayCatalogHandler(DCatEndpoint.Production, new Locale(Market.US, Lang.en, true));
-            await dcathandler.QueryDCATAsync("9wzdncrfj3tj");
+            await dcathandler.QueryDcatAsync("9wzdncrfj3tj");
 
             Assert.True(dcathandler.IsFound);
             Uri SuperHeroArt = StoreLib.Utilities.ImageHelpers.GetImageUri(ImagePurpose.SuperHeroArt, dcathandler.ProductListing);
@@ -86,7 +86,7 @@ namespace StoreLib.Tests
             Lang RandomLang = (Lang)Langs.GetValue(ran.Next(Langs.Length));
             _output.WriteLine($"RandomLocale: Testing with {RandomMarket}-{RandomLang}");
             DisplayCatalogHandler dcathandler = new DisplayCatalogHandler(DCatEndpoint.Production, new Locale(RandomMarket, RandomLang, true));
-            await dcathandler.QueryDCATAsync("9wzdncrfj3tj");
+            await dcathandler.QueryDcatAsync("9wzdncrfj3tj");
 
             Assert.True(dcathandler.IsFound);
             Assert.Equal("Netflix", dcathandler.ProductListing.Product.LocalizedProperties[0].ProductTitle);
@@ -96,7 +96,7 @@ namespace StoreLib.Tests
         public async Task CacheImage()
         {
             DisplayCatalogHandler dcathandler = new DisplayCatalogHandler(DCatEndpoint.Production, new Locale(Market.US, Lang.en, true));
-            await dcathandler.QueryDCATAsync("9wzdncrfj3tj");
+            await dcathandler.QueryDcatAsync("9wzdncrfj3tj");
 
             Assert.True(dcathandler.IsFound);
             Uri SuperHeroArt = StoreLib.Utilities.ImageHelpers.GetImageUri(ImagePurpose.SuperHeroArt, dcathandler.ProductListing);

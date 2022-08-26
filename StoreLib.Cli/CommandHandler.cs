@@ -67,9 +67,9 @@ namespace StoreLib.Cli
         public static async Task PackagesAsync(DisplayCatalogHandler dcatHandler, string id, IdentiferType type)
         {
             if (String.IsNullOrEmpty(Token))
-                await dcatHandler.QueryDCATAsync(id, type);
+                await dcatHandler.QueryDcatAsync(id, type);
             else
-                await dcatHandler.QueryDCATAsync(id, type, Token);
+                await dcatHandler.QueryDcatAsync(id, type, Token);
             
             if (!dcatHandler.IsFound)
             {
@@ -126,9 +126,9 @@ namespace StoreLib.Cli
         public static async Task AdvancedQueryAsync(DisplayCatalogHandler dcatHandler, string id, IdentiferType type)
         {
             if (String.IsNullOrEmpty(Token))
-                await dcatHandler.QueryDCATAsync(id, type);
+                await dcatHandler.QueryDcatAsync(id, type);
             else
-                await dcatHandler.QueryDCATAsync(id, type, Token);
+                await dcatHandler.QueryDcatAsync(id, type, Token);
 
             if (!dcatHandler.IsFound)
             {
@@ -188,7 +188,7 @@ namespace StoreLib.Cli
         {
             try
             {
-                DCatSearch results = await dcatHandler.SearchDCATAsync(query, deviceFamily);
+                DCatSearch results = await dcatHandler.SearchDcatAsync(query, deviceFamily);
 
                 Console.WriteLine($"Search results (Count: {results.TotalResultCount}, Family: {deviceFamily})");
 
@@ -215,9 +215,9 @@ namespace StoreLib.Cli
         public static async Task ConvertId(DisplayCatalogHandler dcatHandler, string id, IdentiferType type)
         {
             if (String.IsNullOrEmpty(Token))
-                await dcatHandler.QueryDCATAsync(id, type);
+                await dcatHandler.QueryDcatAsync(id, type);
             else
-                await dcatHandler.QueryDCATAsync(id, type, Token);
+                await dcatHandler.QueryDcatAsync(id, type, Token);
 
             if (!dcatHandler.IsFound)
             {

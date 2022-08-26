@@ -21,7 +21,7 @@ namespace StoreLib.Tests
         public async Task GetPackagesForNetflix()
         {
             DisplayCatalogHandler displayCatalog = new DisplayCatalogHandler(DCatEndpoint.Production, new Locale(Market.US, Lang.en, true));
-            await displayCatalog.QueryDCATAsync("9wzdncrfj3tj");
+            await displayCatalog.QueryDcatAsync("9wzdncrfj3tj");
 
             Assert.True(displayCatalog.IsFound);
 
@@ -41,7 +41,7 @@ namespace StoreLib.Tests
         public async Task GetPackagesAndNamesForNetflix()
         {
             DisplayCatalogHandler displayCatalog = DisplayCatalogHandler.ProductionConfig();
-            await displayCatalog.QueryDCATAsync("9wzdncrfj3tj");
+            await displayCatalog.QueryDcatAsync("9wzdncrfj3tj");
 
             Assert.True(displayCatalog.IsFound);
 
@@ -57,7 +57,7 @@ namespace StoreLib.Tests
         public async Task GetPackageInstancesForNetflix()
         {
             DisplayCatalogHandler handler = DisplayCatalogHandler.ProductionConfig();
-            await handler.QueryDCATAsync("9wzdncrfj3tj");
+            await handler.QueryDcatAsync("9wzdncrfj3tj");
             Debug.WriteLine("Running GetPackageInstancesForNetflix");
             string WUID = "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa";
             var packageinstances = await handler.GetPackagesForProductAsync();
