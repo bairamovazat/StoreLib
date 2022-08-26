@@ -20,7 +20,15 @@ The above snippet will create a handler that queries the production endpoint, sp
 From there, the handler can query a product listing.
 
 ```csharp
-await dcathandler.QueryDCATAsync("9wzdncrfj3tj");
+DCatSearch results = await dcathandler.QueryDCATAsync("9wzdncrfj3tj");
+
+ foreach (Result res in results.Results)
+    {
+        foreach (Product prod in res.Products)
+        {
+            Console.WriteLine($"{prod.Title} {prod.Type}: {prod.ProductId}. image: {prod.Icon}");
+        }
+    }
 ```
 
 Once you have a product queried, and ensure it was found using `dcathandler.IsFound`, then you can fetch all .appx, .eappx, .xvc and .msixvc packages respectively for the listing using `GetPackagesForProductAsync();`
@@ -31,10 +39,15 @@ Fetches and prints the FE3 download links for Netflix's app packages.
 
 ```csharp
 DisplayCatalogHandler dcathandler = DisplayCatalogHandler.ProductionConfig();
-await dcathandler.QueryDCATAsync("9wzdncrfj3tj");
-foreach(Uri download in await dcathandler.GetPackagesForProductAsync())
+DisplayCatalogModel displayCatalogModel = await dcathandler.QueryDCATAsync("9wzdncrfj3tj");
+Product product = displayCatalogModel.Product;
+
+var packages = await dcatHandler.GetPackagesForProductAsync(product);
+            
+foreach (PackageInstance package in packages)
 {
-  Console.WriteLine(download.ToString());
+    var url = package.PackageUri;
+    Console.WriteLine($"URL: {url}");
 }
 ```
 
