@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Security.Cryptography;
+using StoreLib.Exceptions;
 using StoreLib.Models;
 
 namespace StoreLib.Utilities
@@ -46,6 +46,33 @@ namespace StoreLib.Utilities
                     return Endpoints.DisplayCatalogSearchInt;
                 default:
                     return Endpoints.DisplayCatalogSearch;
+            }
+        }
+
+        public static String EnumToPlatformDependencyName(DeviceFamily deviceFamily)
+        {
+             switch (deviceFamily)
+            {
+                case DeviceFamily.Desktop:
+                    return "Windows.Desktop";
+                case DeviceFamily.Xbox:
+                    return "Windows.Xbox";
+                case DeviceFamily.Universal:
+                    return "Windows.Universal";
+                case DeviceFamily.Mobile:
+                    return "Windows.Mobile";
+                case DeviceFamily.HoloLens:
+                    return "Windows.Holographic";
+                case DeviceFamily.IotCore:
+                    return "Windows.Iot";
+                case DeviceFamily.ServerCore:
+                    return "Windows.Server";
+                case DeviceFamily.Andromeda:
+                    return "Windows.8828080";
+                case DeviceFamily.WCOS:
+                    return "Windows.Core";
+                default:
+                    throw new NotFoundException($"Undefined DeviceFamily {deviceFamily.ToString()}");
             }
         }
 
@@ -119,10 +146,11 @@ namespace StoreLib.Utilities
 
             }
 
-
         }
 
-
-
+        public static Uri CreateDCatUri(DCatEndpoint endpoint, DeviceFamily deviceFamily, string query)
+        {
+            return new Uri($"{TypeHelpers.EnumToSearchUri(endpoint)}{query}&productFamilyNames=apps,games&platformDependencyName={TypeHelpers.EnumToPlatformDependencyName(deviceFamily)}");
+        }
     }
 }

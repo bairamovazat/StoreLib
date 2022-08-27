@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using StoreLib.Exceptions;
+using StoreLib.Utilities;
 
 namespace StoreLib.Services
 {
@@ -12,9 +13,7 @@ namespace StoreLib.Services
     {
         private readonly MSHttpClient _httpClient;
         
-        private Uri ConstructedUri { get; set; }
-        private DCatEndpoint _selectedEndpoint;
-        public DisplayCatalogResult Result { get; private set; }
+        private readonly DCatEndpoint _selectedEndpoint;
         private readonly Locale _selectedLocale;
 
 
@@ -65,42 +64,13 @@ namespace StoreLib.Services
         /// <returns></returns>
         public async Task<DisplayCatalogModel> QueryDcatAsync(string id, IdentiferType idType = IdentiferType.ProductID, string authenticationToken = null) //Optional Authentication Token used for Sandbox and Flighting Queries.
         {
-            ConstructedUri = Utilities.UriHelpers.CreateAlternateDCatUri(_selectedEndpoint, id, idType, _selectedLocale);
-            Result = new DisplayCatalogResult(); //We need to clear the result incase someone queries a product, then queries a not found one, the wrong product will be returned.
-            HttpResponseMessage httpResponse;
+            var url = UriHelpers.CreateAlternateDCatUri(_selectedEndpoint, id, idType, _selectedLocale);
             
-            //We need to build the request URL based on the requested EndPoint;
-            var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, ConstructedUri);
-
-            if (!String.IsNullOrEmpty(authenticationToken))
-            {
-                httpRequestMessage.Headers.TryAddWithoutValidation("Authentication", authenticationToken);
-            }
-
-            try
-            {
-                httpResponse = await _httpClient.SendAsync(httpRequestMessage, new System.Threading.CancellationToken());
-            }
-            catch (TaskCanceledException e)
-            {
-                throw new TimeoutException("Request time out", e);
-            }
+            var httpResponse = await SendRequest(url, HttpMethod.Get, authenticationToken);
             
-            if (httpResponse.IsSuccessStatusCode)
-            {
-                string content = await httpResponse.Content.ReadAsStringAsync();
-                return DisplayCatalogModel.FromJson(content);
-            }
+            string content = await httpResponse.Content.ReadAsStringAsync();
+            return DisplayCatalogModel.FromJson(content);
 
-            if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                throw new NotFoundException(_selectedEndpoint.ToString());
-            }
-
-            var rawResponse = await httpResponse.Content.ReadAsStringAsync();
-            
-            throw new HttpException($"Failed to query DisplayCatalog Endpoint: {_selectedEndpoint.ToString()} Status Code: {httpResponse.StatusCode} Returned Data: {rawResponse}",
-                _selectedEndpoint.ToString(), (int)httpResponse.StatusCode, rawResponse);
         }
 
         /// <summary>
@@ -111,62 +81,45 @@ namespace StoreLib.Services
         /// <returns>Instance of DCatSearch, containing the returned products.</returns>
         public async Task<DCatSearch> SearchDcatAsync(string query, DeviceFamily deviceFamily)
         {
-            HttpResponseMessage httpResponse = new HttpResponseMessage();
-            HttpRequestMessage httpRequestMessage;
-            switch (deviceFamily)
-            {
-                case DeviceFamily.Desktop:
-                    httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Utilities.TypeHelpers.EnumToSearchUri(_selectedEndpoint)}{query}&productFamilyNames=apps,games&platformDependencyName=Windows.Desktop");
-                    httpResponse = await _httpClient.SendAsync(httpRequestMessage, new System.Threading.CancellationToken());
-                    break;
-                case DeviceFamily.Xbox:
-                    httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Utilities.TypeHelpers.EnumToSearchUri(_selectedEndpoint)}{query}&productFamilyNames=apps,games&platformDependencyName=Windows.Xbox");
-                    httpResponse = await _httpClient.SendAsync(httpRequestMessage, new System.Threading.CancellationToken());
-                    break;
-                case DeviceFamily.Universal:
-                    httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Utilities.TypeHelpers.EnumToSearchUri(_selectedEndpoint)}{query}&productFamilyNames=apps,games&platformDependencyName=Windows.Universal");
-                    httpResponse = await _httpClient.SendAsync(httpRequestMessage, new System.Threading.CancellationToken());
-                    break;
-                case DeviceFamily.Mobile:
-                    httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Utilities.TypeHelpers.EnumToSearchUri(_selectedEndpoint)}{query}&productFamilyNames=apps,games&platformDependencyName=Windows.Mobile");
-                    httpResponse = await _httpClient.SendAsync(httpRequestMessage, new System.Threading.CancellationToken());
-                    break;
-                case DeviceFamily.HoloLens:
-                    httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Utilities.TypeHelpers.EnumToSearchUri(_selectedEndpoint)}{query}&productFamilyNames=apps,games&platformDependencyName=Windows.Holographic");
-                    httpResponse = await _httpClient.SendAsync(httpRequestMessage, new System.Threading.CancellationToken());
-                    break;
-                case DeviceFamily.IotCore:
-                    httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Utilities.TypeHelpers.EnumToSearchUri(_selectedEndpoint)}{query}&productFamilyNames=apps,games&platformDependencyName=Windows.Iot");
-                    httpResponse = await _httpClient.SendAsync(httpRequestMessage, new System.Threading.CancellationToken());
-                    break;
-                case DeviceFamily.ServerCore:
-                    httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Utilities.TypeHelpers.EnumToSearchUri(_selectedEndpoint)}{query}&productFamilyNames=apps,games&platformDependencyName=Windows.Server");
-                    httpResponse = await _httpClient.SendAsync(httpRequestMessage, new System.Threading.CancellationToken());
-                    break;
-                case DeviceFamily.Andromeda:
-                    httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Utilities.TypeHelpers.EnumToSearchUri(_selectedEndpoint)}{query}&productFamilyNames=apps,games&platformDependencyName=Windows.8828080");
-                    httpResponse = await _httpClient.SendAsync(httpRequestMessage, new System.Threading.CancellationToken());
-                    break;
-                case DeviceFamily.WCOS:
-                    httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Utilities.TypeHelpers.EnumToSearchUri(_selectedEndpoint)}{query}&productFamilyNames=apps,games&platformDependencyName=Windows.Core");
-                    httpResponse = await _httpClient.SendAsync(httpRequestMessage, new System.Threading.CancellationToken());
-                    break;
-            }
 
-            if (!httpResponse.IsSuccessStatusCode)
-            {
-                var message =
-                    $"Failed to search DisplayCatalog: {deviceFamily.ToString()} Status Code: {httpResponse.StatusCode} Returned Data: {await httpResponse.Content.ReadAsStringAsync()}";
-                throw new Exception(message);
-            }
+            var url = UriHelpers.CreateDCatUri(_selectedEndpoint, deviceFamily, query);
+            var httpResponse = await SendRequest(url, HttpMethod.Get);
 
             string content = await httpResponse.Content.ReadAsStringAsync();
-            Result = DisplayCatalogResult.Found;
-            DCatSearch dcatSearch = DCatSearch.FromJson(content);
-            return dcatSearch;
+            return DCatSearch.FromJson(content);
+        }
+
+        private async Task<HttpResponseMessage> SendRequest(Uri url, HttpMethod httpMethod, string authenticationToken = null)
+        {
+            HttpRequestMessage httpRequestMessage = new HttpRequestMessage(httpMethod, url);
+            if (!String.IsNullOrEmpty(authenticationToken))
+            {
+                httpRequestMessage.Headers.TryAddWithoutValidation("Authentication", authenticationToken);
+            }
+            HttpResponseMessage httpResponse;
+            try
+            {
+                httpResponse = await _httpClient.SendAsync(httpRequestMessage, new System.Threading.CancellationToken());
+            }
+            catch (TaskCanceledException e)
+            {
+                throw new TimeOutException(url.ToString(), 0, null);
+            }
+            
+            if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                throw new NotFoundException(url.ToString(), (int) httpResponse.StatusCode, await httpResponse.Content.ReadAsStringAsync());
+            }
+            
+            if (!httpResponse.IsSuccessStatusCode)
+            {
+                throw new NotFoundException(url.ToString(), (int) httpResponse.StatusCode, await httpResponse.Content.ReadAsStringAsync());
+            }
+            
+            return httpResponse;
 
         }
-        
+
     }
     
 }

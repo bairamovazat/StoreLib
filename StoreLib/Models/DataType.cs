@@ -59,13 +59,4 @@ namespace StoreLib.Models
         Universal,
         WCOS
     }
-
-    public enum DisplayCatalogResult
-    {
-        NotFound,
-        Restricted,
-        TimedOut, 
-        Error,
-        Found
-    }
 }

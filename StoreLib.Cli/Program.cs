@@ -69,22 +69,19 @@ namespace StoreLib.Cli
                 CommandHandler.Token = opts.AuthToken;
             }
 
+            
+            
             // Base search
             DCatSearch results;
             try
             {
                 results = await dcatHandler.SearchDcatAsync(name, opts.DeviceFamily);
             }
-            catch (Exception exception)
+            catch (StoreLibException exception)
             {
                 Console.WriteLine("Failed to search DisplayCatalog");
                 Console.WriteLine(exception);
                 return;
-            }
-
-            if (dcatHandler.Result != DisplayCatalogResult.Found)
-            {
-                Console.WriteLine("Result not found");   
             }
             
             foreach (Result res in results.Results)
@@ -104,6 +101,7 @@ namespace StoreLib.Cli
             }
             
             
+            
             // Product full info
             DisplayCatalogModel displayCatalogModel;
             try
@@ -117,16 +115,22 @@ namespace StoreLib.Cli
                 return;
             }
 
-            Product product = displayCatalogModel.Product;
-            //download product
             
+            
+            Product product = displayCatalogModel.Product;
+            
+            
+            
+            //download product
             var packages = await dcatHandler.GetPackagesForProductAsync(product);
-            //iterate through all packages
+            
             foreach (PackageInstance package in packages)
             {
                 var url = package.PackageUri;
                 Console.WriteLine($"URL: {url}");
             }
+            
+            
 
         }
         
