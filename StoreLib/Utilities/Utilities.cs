@@ -3,6 +3,7 @@ using System.Text;
 using System.Security.Cryptography;
 using StoreLib.Exceptions;
 using StoreLib.Models;
+using StoreLib.Services;
 
 namespace StoreLib.Utilities
 {
@@ -148,9 +149,9 @@ namespace StoreLib.Utilities
 
         }
 
-        public static Uri CreateDCatUri(DCatEndpoint endpoint, DeviceFamily deviceFamily, string query)
+        public static Uri CreateDCatUri(DCatEndpoint endpoint, DeviceFamily deviceFamily, Locale locale, string query)
         {
-            return new Uri($"{TypeHelpers.EnumToSearchUri(endpoint)}{query}&productFamilyNames=apps,games&platformDependencyName={TypeHelpers.EnumToPlatformDependencyName(deviceFamily)}");
+            return new Uri($"{TypeHelpers.EnumToSearchUri(endpoint)}{query}&productFamilyNames=apps,games&market={locale.Market}&languages={locale.Language}&platformDependencyName={TypeHelpers.EnumToPlatformDependencyName(deviceFamily)}");
         }
     }
 }

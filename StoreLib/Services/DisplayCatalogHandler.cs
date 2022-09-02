@@ -82,7 +82,7 @@ namespace StoreLib.Services
         public async Task<DCatSearch> SearchDcatAsync(string query, DeviceFamily deviceFamily)
         {
 
-            var url = UriHelpers.CreateDCatUri(_selectedEndpoint, deviceFamily, query);
+            var url = UriHelpers.CreateDCatUri(_selectedEndpoint, deviceFamily, _selectedLocale, query);
             var httpResponse = await SendRequest(url, HttpMethod.Get);
 
             string content = await httpResponse.Content.ReadAsStringAsync();

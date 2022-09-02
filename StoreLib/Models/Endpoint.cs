@@ -34,8 +34,8 @@ namespace StoreLib.Models
         public static readonly Uri DCATDev = new Uri("https://displaycatalog-dev.mp.microsoft.com/v7.0/products/");
         public static readonly Uri DCATOneP = new Uri("https://displaycatalog1p.mp.microsoft.com/v7.0/products/");
         public static readonly Uri DCATOnePInt = new Uri("https://displaycatalog1p-int.mp.microsoft.com/v7.0/products/");
-        public static readonly Uri DisplayCatalogSearch = new Uri("https://displaycatalog.mp.microsoft.com/v7.0/productFamilies/autosuggest?market=US&languages=en-US&query=");
-        public static readonly Uri DisplayCatalogSearchInt = new Uri("https://displaycatalog-int.mp.microsoft.com/v7.0/productFamilies/autosuggest?market=US&languages=en-US&query=");
+        public static readonly Uri DisplayCatalogSearch = new Uri("https://displaycatalog.mp.microsoft.com/v7.0/productFamilies/autosuggest?query=");
+        public static readonly Uri DisplayCatalogSearchInt = new Uri("https://displaycatalog-int.mp.microsoft.com/v7.0/productFamilies/autosuggest?query=");
         //the following endpoints have been reported but I have not personally seen them yet
         //scat means staging catalog in the same way that dcat means display catalog
         public static readonly Uri SCATProd = new Uri("https://stagingcatalog.mp.microsoft.com/v7.0/products/");

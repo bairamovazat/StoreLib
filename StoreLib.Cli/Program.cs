@@ -50,7 +50,7 @@ namespace StoreLib.Cli
 
         private static async Task Run(Options opts)
         {
-            String name = "Whatsapp";
+            String name = "ВК";
 
             DisplayCatalogHandler dcatHandler = new DisplayCatalogHandler(
                 opts.Environment,
