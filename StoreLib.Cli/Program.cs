@@ -68,8 +68,6 @@ namespace StoreLib.Cli
                 Console.WriteLine("Setting token...");
                 CommandHandler.Token = opts.AuthToken;
             }
-
-            
             
             // Base search
             DCatSearch results;
@@ -100,8 +98,6 @@ namespace StoreLib.Cli
                 return;
             }
             
-            
-            
             // Product full info
             DisplayCatalogModel displayCatalogModel;
             try
@@ -115,11 +111,7 @@ namespace StoreLib.Cli
                 return;
             }
 
-            
-            
             Product product = displayCatalogModel.Product;
-            
-            
             
             //download product
             var packages = await dcatHandler.GetPackagesForProductAsync(product);
