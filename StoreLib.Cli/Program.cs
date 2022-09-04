@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using StoreLib.Services;
 using StoreLib.Models;
@@ -50,7 +52,7 @@ namespace StoreLib.Cli
 
         private static async Task Run(Options opts)
         {
-            String name = "ВК";
+            String name = "Nvidia";
 
             DisplayCatalogHandler dcatHandler = new DisplayCatalogHandler(
                 opts.Environment,
@@ -69,11 +71,13 @@ namespace StoreLib.Cli
                 CommandHandler.Token = opts.AuthToken;
             }
             
-            // Base search
-            DCatSearch results;
+            
+            // Advanced search
+
+            AdvancedSearchResult advancedSearchResult;
             try
             {
-                results = await dcatHandler.SearchDcatAsync(name, opts.DeviceFamily);
+                advancedSearchResult = await dcatHandler.SearchProducts(name);
             }
             catch (StoreLibException exception)
             {
@@ -82,27 +86,56 @@ namespace StoreLib.Cli
                 return;
             }
             
-            foreach (Result res in results.Results)
-            {
-                foreach (Product prod in res.Products)
-                {
-                    Console.WriteLine($"{prod.Title} {prod.Type}: {prod.ProductId}. image: {prod.Icon}");
-                }
-            }
-
-            var firstResult = results.Results.Find(e => e.Products.Count != 0);
+            Console.WriteLine(advancedSearchResult.ToString());
+           
             
-            if (firstResult == null)
-            {
-                Console.WriteLine("Results count 0.");
-                return;
-            }
+            // // Base search
+            // DCatSearch results;
+            // try
+            // {
+            //     results = await dcatHandler.SearchDcatAsync(name, opts.DeviceFamily);
+            // }
+            // catch (StoreLibException exception)
+            // {
+            //     Console.WriteLine("Failed to search DisplayCatalog");
+            //     Console.WriteLine(exception);
+            //     return;
+            // }
+            //
+            // foreach (Result res in results.Results)
+            // {
+            //     foreach (Product prod in res.Products)
+            //     {
+            //         Console.WriteLine($"{prod.Title} {prod.Type}: {prod.ProductId}. image: {prod.Icon}");
+            //     }
+            // }
+
+            List<AdvancedProduct> products = new List<AdvancedProduct>()
+                .Concat(advancedSearchResult.HighlightedList)
+                .Concat(advancedSearchResult.ProductsList)
+                .ToList();
+
+            var firstResult = products[0];
+            
+            Console.WriteLine(firstResult.ProductId);
+            Console.WriteLine(firstResult.Description);
+            Console.WriteLine(firstResult.PublisherName);
+            Console.WriteLine(firstResult.PublisherId);
+            Console.WriteLine(firstResult.AverageRating);
+            Console.WriteLine(firstResult.RatingCount);
+            Console.WriteLine(firstResult.ProductType);
+            Console.WriteLine(firstResult.Price);
+            Console.WriteLine(firstResult.RatingCount);
+
+            Console.WriteLine(firstResult.Title);
+            Console.WriteLine(firstResult.GetLogo().Url);
+            Console.WriteLine(firstResult.IconUrl);
             
             // Product full info
             DisplayCatalogModel displayCatalogModel;
             try
             {
-                displayCatalogModel = await dcatHandler.QueryDcatAsync(firstResult.Products[0].ProductId, IdentiferType.ProductID);
+                displayCatalogModel = await dcatHandler.QueryDcatAsync(firstResult.ProductId, IdentiferType.ProductID);
             }
             catch (StoreLibException exception)
             {

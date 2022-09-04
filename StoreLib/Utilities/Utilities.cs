@@ -153,5 +153,10 @@ namespace StoreLib.Utilities
         {
             return new Uri($"{TypeHelpers.EnumToSearchUri(endpoint)}{query}&productFamilyNames=apps,games&market={locale.Market}&languages={locale.Language}&platformDependencyName={TypeHelpers.EnumToPlatformDependencyName(deviceFamily)}");
         }
+        
+        public static Uri CreateSearchUrl(Locale locale, string query)
+        {
+            return new Uri($"{Endpoints.AdvancedSearchProducts}?hl={locale.Language}&gl={locale.Market}&icid=CNavAppsWindowsApps&FilteredCategories=AllProducts&Query={query}");
+        }
     }
 }

@@ -89,6 +89,15 @@ namespace StoreLib.Services
             return DCatSearch.FromJson(content);
         }
 
+        public async Task<AdvancedSearchResult> SearchProducts(string query)
+        {
+            var url = UriHelpers.CreateSearchUrl(_selectedLocale, query);
+            var httpResponse = await SendRequest(url, HttpMethod.Get);
+
+            string content = await httpResponse.Content.ReadAsStringAsync();
+            return AdvancedSearchResult.FromJson(content);
+        }
+
         private async Task<HttpResponseMessage> SendRequest(Uri url, HttpMethod httpMethod, string authenticationToken = null)
         {
             HttpRequestMessage httpRequestMessage = new HttpRequestMessage(httpMethod, url);
@@ -121,5 +130,6 @@ namespace StoreLib.Services
         }
 
     }
-    
+
+
 }

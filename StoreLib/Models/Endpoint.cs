@@ -36,6 +36,10 @@ namespace StoreLib.Models
         public static readonly Uri DCATOnePInt = new Uri("https://displaycatalog1p-int.mp.microsoft.com/v7.0/products/");
         public static readonly Uri DisplayCatalogSearch = new Uri("https://displaycatalog.mp.microsoft.com/v7.0/productFamilies/autosuggest?query=");
         public static readonly Uri DisplayCatalogSearchInt = new Uri("https://displaycatalog-int.mp.microsoft.com/v7.0/productFamilies/autosuggest?query=");
+
+        public static readonly Uri AdvancedSearchProducts =
+            new Uri(
+                "https://apps.microsoft.com/store/api/Products/GetFilteredSearch");
         //the following endpoints have been reported but I have not personally seen them yet
         //scat means staging catalog in the same way that dcat means display catalog
         public static readonly Uri SCATProd = new Uri("https://stagingcatalog.mp.microsoft.com/v7.0/products/");
